@@ -1,19 +1,32 @@
 defmodule ActivityList do
-  def new do
-    Map.new
+  defstruct auto_id: 1, activities: []
+
+  def new, do: %ActivityList{}
+
+  def add_activity(activity_list, activity_name, today) do
+    activity = {activity_list.auto_id, Activity.new(activity_name, today)}
+    Map.put(activity_list, :activities, [activity|activity_list.activities])
+    |> Map.put(:auto_id, activity_list.auto_id + 1)
   end
 
-  def add_activity(act_list, act) do
-    now = DateTime.utc_now
-    Map.put(act_list, act, now)
+  def activities(activity_list) do
+    activity_list.activities
   end
 
-  def refresh(act_list, act) do
-    Map.update!(act_list, act, &DateTime.utc_now/0)
+end
+
+defmodule Activity do
+  defstruct activity_name: nil, latest_date: nil
+
+  def new(activity_name, latest_date) do
+    %Activity{activity_name: activity_name, latest_date: latest_date}
   end
 
-  def get_howlong(act_list, act) do
-    last = Map.get(act_list, act)
-    DateTime.utc_now |> DateTime.diff(last)
+  def refresh(activity, %Date{calendar: _, day: _, month: _, year: _} = today) do
+    Map.put(activity, :latest_date, today)
+  end
+
+  def howlong(activity, %Date{calendar: _, day: _, month: _, year: _} = today) do
+    Date.diff(today, activity.latest_date)
   end
 end
