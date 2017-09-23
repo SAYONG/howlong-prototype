@@ -23,6 +23,11 @@ defmodule ActivityListServer do
     {:ok, %{auto_id: 1, activities: []}}
   end
 
+
+  def handle_call({:activities}, _, state) do
+    {:reply, state.activities, state}
+  end
+
   def handle_cast({:add_activity, activity_name, date}, state) do
     activity = {state.auto_id, Activity.new(activity_name, date)}
     new_state = Map.put(state, :activities, [activity|state.activities])
@@ -31,8 +36,12 @@ defmodule ActivityListServer do
     {:noreply, new_state}
   end
 
-  def handle_call({:activities}, _, state) do
-    {:reply, state.activities, state}
+  def handle_cast({:refresh_activity, id}, state) do
+    refreshed_activity = Enum.find(state.activities, &match?({^id, _}, &1))
+                          |> elem(1)
+                          |> Activity.refresh(Date.utc_today)
+    new_activities = [{id, refreshed_activity} | Enum.filter(state.activities, &not(match?({^id, _}, &1)))]
+    {:noreply, Map.put(state, :activities, new_activities)}
   end
 
   # Interface
