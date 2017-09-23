@@ -1,20 +1,3 @@
-defmodule ActivityList do
-  defstruct auto_id: 1, activities: []
-
-  def new, do: %ActivityList{}
-
-  def add_activity(activity_list, activity_name, today) do
-    activity = {activity_list.auto_id, Activity.new(activity_name, today)}
-    Map.put(activity_list, :activities, [activity|activity_list.activities])
-    |> Map.put(:auto_id, activity_list.auto_id + 1)
-  end
-
-  def activities(activity_list) do
-    activity_list.activities
-  end
-
-end
-
 defmodule Activity do
   defstruct activity_name: nil, latest_date: nil
 
@@ -22,11 +5,42 @@ defmodule Activity do
     %Activity{activity_name: activity_name, latest_date: latest_date}
   end
 
-  def refresh(activity, %Date{calendar: _, day: _, month: _, year: _} = today) do
-    Map.put(activity, :latest_date, today)
+  def refresh(activity, %Date{calendar: _, day: _, month: _, year: _} = date) do
+    Map.put(activity, :latest_date, date)
   end
 
-  def howlong(activity, %Date{calendar: _, day: _, month: _, year: _} = today) do
-    Date.diff(today, activity.latest_date)
+  def howlong(activity, %Date{calendar: _, day: _, month: _, year: _} = date) do
+    Date.diff(date, activity.latest_date)
   end
+end
+
+
+defmodule ActivityListServer do
+  use GenServer
+
+  # Hnadler
+  def init(_) do
+    {:ok, %{auto_id: 1, activities: []}}
+  end
+
+  def handle_cast({:add_activity, activity_name, date}, state) do
+    activity = {state.auto_id, Activity.new(activity_name, date)}
+    new_state = Map.put(state, :activities, [activity|state.activities])
+      |> Map.put(:auto_id, state.auto_id + 1)
+
+    {:noreply, new_state}
+  end
+
+  def handle_call({:activities}, _, state) do
+    {:reply, state.activities, state}
+  end
+
+  # Interface
+  def add_activity(pid, activity_name, date) do
+    GenServer.cast(pid, {:add_activity, activity_name, date})
+  end
+
+  def activities(pid) do
+    GenServer.call(pid, {:activities})
+  end 
 end
