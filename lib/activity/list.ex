@@ -1,53 +1,61 @@
-defmodule Activity do
-  defstruct activity_name: nil, latest_date: nil
+defmodule Activity.List do
+  defstruct auto_id: 1, activities: Map.new
 
-  def new(activity_name, latest_date) do
-    %Activity{activity_name: activity_name, latest_date: latest_date}
+  def new(activities \\ []) do
+    Enum.reduce(
+      activities,
+      %Activity.List{},
+      &add_activity(&2, &1)
+    )
   end
 
-  def refresh(activity, %Date{calendar: _, day: _, month: _, year: _} = date) do
-    Map.put(activity, :latest_date, date)
+  def size(activity_list) do
+    Map.size(activity_list.activities)
   end
 
-  def howlong(activity, %Date{calendar: _, day: _, month: _, year: _} = date) do
-    Date.diff(date, activity.latest_date)
-  end
-end
+  def add_activity(
+    %Activity.List{activities: activities, auto_id: auto_id} = activity_list,
+    activity
+  ) do
+    activity = Map.put(activity, :id, auto_id)
+    new_activities = Map.put(activities, auto_id, activity)
 
-defmodule ActivityList do
-
-  # Hnadler
-  def init(_) do
-    {:ok, %{auto_id: 1, activities: []}}
-  end
-
-
-  def handle_call({:activities}, _, state) do
-    {:reply, state.activities, state}
+    %Activity.List{activity_list |
+      activities: new_activities,
+      auto_id: auto_id + 1
+    }
   end
 
-  def handle_cast({:add_activity, activity_name, date}, state) do
-    activity = {state.auto_id, Activity.new(activity_name, date)}
-    new_state = Map.put(state, :activities, [activity|state.activities])
-      |> Map.put(:auto_id, state.auto_id + 1)
-
-    {:noreply, new_state}
+  def activities(%Activity.List{activities: activities}) do
+    activities
+      |> Enum.map(fn({_, activity}) -> activity end)
   end
 
-  def handle_cast({:refresh_activity, id}, state) do
-    refreshed_activity = Enum.find(state.activities, &match?({^id, _}, &1))
-                          |> elem(1)
-                          |> Activity.refresh(Date.utc_today)
-    new_activities = [{id, refreshed_activity} | Enum.filter(state.activities, &not(match?({^id, _}, &1)))]
-    {:noreply, Map.put(state, :activities, new_activities)}
+  def refresh_activity(activity_list, activity_id) do
+    update_activity(activity_list, activity_id, fn(activity) -> %{activity| date: Date.utc_today()}  end)
   end
 
-  # Interface
-  def add_activity(pid, activity_name, date) do
-    GenServer.cast(pid, {:add_activity, activity_name, date})
+  def update_activity(
+    %Activity.List{activities: activities} = activity_list,
+    activity_id,
+    updater_fun
+  ) do
+    case activities[activity_id] do
+      nil -> 
+        activity_list
+
+      old_activity ->
+        new_activity = updater_fun.(old_activity)
+        new_activities = Map.put(activities, new_activity.id, new_activity)
+        %Activity.List{activity_list | activities: new_activities}
+    end
   end
 
-  def activities(pid) do
-    GenServer.call(pid, {:activities})
-  end 
+
+  def delete_activity(
+    %Activity.List{activities: activities} = activity_list,
+    activity_id
+  ) do
+    %Activity.List{activity_list | activities: Map.delete(activities, activity_id)}
+  end
 end
