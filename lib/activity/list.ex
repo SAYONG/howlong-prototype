@@ -32,7 +32,16 @@ defmodule Activity.List do
   end
 
   def refresh_activity(activity_list, activity_id) do
-    update_activity(activity_list, activity_id, fn(activity) -> %{activity| date: Date.utc_today()}  end)
+    update_activity(activity_list, activity_id, fn(activity) -> %{activity| since: Date.utc_today()}  end)
+  end
+
+  def howlong(%Activity.List{activities: activities}, activity_id) do
+    case activities[activity_id] do
+      nil -> 
+        nil
+      activity ->
+        activity.since
+    end
   end
 
   def update_activity(
