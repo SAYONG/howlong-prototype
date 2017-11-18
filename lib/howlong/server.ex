@@ -2,8 +2,8 @@ defmodule Howlong.Server do
   use GenServer
 
   # API
-  def start do
-    GenServer.start(__MODULE__, nil)
+  def start(server_name) do
+    GenServer.start(__MODULE__, server_name)
   end
 
   def add_activity(howlong_server, activity_name) do
@@ -25,26 +25,27 @@ defmodule Howlong.Server do
 
 
   # Handlers
-  def init(_) do
-    {:ok, Howlong.ActivityList.new}
+  def init(server_name) do
+    {:ok, {server_name, Howlong.Database.get(server_name) || Howlong.ActivityList.new}}
   end
 
-  def handle_cast({:add_activity, new_activity}, activity_list) do
+  def handle_cast({:add_activity, new_activity}, {server_name, activity_list}) do
     new_state = Howlong.ActivityList.add_activity(activity_list, new_activity)
-    {:noreply, new_state}
+    Howlong.Database.store(server_name, new_state)
+    {:noreply, {server_name, new_state}}
   end
 
-  def handle_cast({:refresh, activity_id}, activity_list) do
+  def handle_cast({:refresh, activity_id}, {server_name, activity_list}) do
     new_state = Howlong.ActivityList.refresh_activity(activity_list, activity_id)
-    {:noreply, new_state}
+    {:noreply, {server_name, new_state}}
   end
 
-  def handle_call({:activities}, _, activity_list) do
-    {:reply, Howlong.ActivityList.activities(activity_list), activity_list}
+  def handle_call({:activities}, _, {server_name, activity_list}) do
+    {:reply, Howlong.ActivityList.activities(activity_list), {server_name, activity_list}}
   end
 
-  def handle_call({:howlong, activity_id}, _, activity_list) do
-    {:reply, Howlong.ActivityList.howlong(activity_list, activity_id), activity_list}
+  def handle_call({:howlong, activity_id}, _, {server_name, activity_list}) do
+    {:reply, Howlong.ActivityList.howlong(activity_list, activity_id), {server_name, activity_list}}
   end
 
   # Needed for testing purposes
