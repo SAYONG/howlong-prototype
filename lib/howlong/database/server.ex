@@ -2,9 +2,9 @@ defmodule Howlong.Database.Server do
   use GenServer
 
   # API
-  def start(db_folder) do
+  def start_link(db_folder) do
     IO.puts "Starting Database server"
-    GenServer.start(__MODULE__, db_folder,
+    GenServer.start_link(__MODULE__, db_folder,
       name: :database_server)
   end
 
@@ -21,7 +21,7 @@ defmodule Howlong.Database.Server do
   def init(db_folder) do
     worker_list = Stream.map(0..9, fn(n) -> worker_index(db_folder, n) end)
       |> Enum.map(fn(n) -> File.mkdir_p(n); n end)
-      |> Enum.map(fn(n) -> {:ok, pid} = Howlong.Database.Worker.start(n); pid end)
+      |> Enum.map(fn(n) -> {:ok, pid} = Howlong.Database.Worker.start_link(n); pid end)
     {:ok, worker_list}
   end
 

@@ -2,9 +2,9 @@ defmodule Howlong.Server do
   use GenServer
 
   # API
-  def start(server_name) do
+  def start_link(server_name) do
     IO.puts "Starting Howlong server #{server_name}"
-    GenServer.start(__MODULE__, server_name)
+    GenServer.start_link(__MODULE__, server_name)
   end
 
   def add_activity(howlong_server, activity_name) do

@@ -2,9 +2,9 @@ defmodule Howlong.Database.Worker do
   use GenServer
 
   # API
-  def start(db_folder) do
+  def start_link(db_folder) do
     IO.puts "Starting Database Worker #{db_folder}"
-    GenServer.start(__MODULE__, db_folder)
+    GenServer.start_link(__MODULE__, db_folder)
   end
 
   def store(pid, key, data) do
