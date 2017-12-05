@@ -3,6 +3,7 @@ defmodule Howlong.Database.Server do
 
   # API
   def start(db_folder) do
+    IO.puts "Starting Database server"
     GenServer.start(__MODULE__, db_folder,
       name: :database_server)
   end

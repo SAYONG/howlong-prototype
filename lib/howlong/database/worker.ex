@@ -3,6 +3,7 @@ defmodule Howlong.Database.Worker do
 
   # API
   def start(db_folder) do
+    IO.puts "Starting Database Worker #{db_folder}"
     GenServer.start(__MODULE__, db_folder)
   end
 

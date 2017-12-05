@@ -3,7 +3,7 @@ defmodule Howlong.Cache do
 
   # API
   def start_link do
-    IO.puts "Start Howlong Cache Process"
+    IO.puts "Starting Howlong Cache Process"
     GenServer.start_link(__MODULE__, nil, name: :howlong_cache)
   end
 

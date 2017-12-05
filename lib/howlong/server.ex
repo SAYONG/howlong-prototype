@@ -3,6 +3,7 @@ defmodule Howlong.Server do
 
   # API
   def start(server_name) do
+    IO.puts "Starting Howlong server #{server_name}"
     GenServer.start(__MODULE__, server_name)
   end
 

@@ -2,6 +2,7 @@ defmodule Howlong.Supervisor do
   use Supervisor
 
   def start_link do
+    IO.puts "Starting Howlong Supervisor"
     Supervisor.start_link(__MODULE__, nil)
   end
 
