@@ -2,14 +2,14 @@ defmodule Howlong.Cache do
   use GenServer
 
   # API
-  def start do
-    GenServer.start(__MODULE__, nil)
+  def start_link do
+    IO.puts "Start Howlong Cache Process"
+    GenServer.start_link(__MODULE__, nil, name: :howlong_cache)
   end
 
-  def server_process(cache_pid, server_name) do
-    GenServer.call(cache_pid, {:server_process, server_name})
+  def server_process(server_name) do
+    GenServer.call(:howlong_cache, {:server_process, server_name})
   end 
-
 
   # Handlers
   def init(_) do
