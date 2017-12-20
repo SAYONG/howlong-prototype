@@ -4,7 +4,7 @@ defmodule Howlong.Server do
   # API
   def start_link(server_name) do
     IO.puts "Starting Howlong server #{server_name}"
-    GenServer.start_link(__MODULE__, server_name)
+    GenServer.start_link(__MODULE__, server_name, name: via_tuple(server_name))
   end
 
   def add_activity(howlong_server, activity_name) do
@@ -22,6 +22,10 @@ defmodule Howlong.Server do
 
   def refresh(howlong_server, activity_id) do
     GenServer.cast(howlong_server, {:refresh, activity_id})
+  end
+
+  def whereis(name) do
+    Howlong.ProcessRegistry.whereis_name({:howlong_server, name})
   end
 
 
@@ -52,4 +56,9 @@ defmodule Howlong.Server do
   # Needed for testing purposes
   def handle_info(:stop, todo_list), do: {:stop, :normal, todo_list}
   def handle_info(_, state), do: {:noreply, state}
+
+  # Private
+  defp via_tuple(name) do
+    {:via, Howlong.ProcessRegistry, {:howlong_server, name}}
+  end
 end

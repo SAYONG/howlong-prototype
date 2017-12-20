@@ -21,7 +21,7 @@ defmodule Howlong.Cache do
       {:ok, howlong_server} ->
         {:reply, howlong_server, howlong_servers}
       :error ->
-        {:ok, new_howlong_server} = Howlong.Server.start_link(howlong_server_name)
+        {:ok, new_howlong_server} = Howlong.ServerSupervisor.start_child(howlong_server_name)
         {:reply, new_howlong_server, Map.put(howlong_servers, howlong_server_name, new_howlong_server)}
     end
   end

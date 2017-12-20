@@ -10,6 +10,7 @@ defmodule Howlong.Supervisor do
     processes = [
       worker(Howlong.ProcessRegistry ,[]),
       supervisor(Howlong.Database, ["./persist/"]),
+      supervisor(Howlong.ServerSupervisor, []),
       worker(Howlong.Cache, [])]
 
     supervise(processes, strategy: :one_for_one)
