@@ -13,7 +13,6 @@ defmodule Howlong.Cache do
 
   # Handlers
   def init(_) do
-    Howlong.Database.start_link("./persist/")
     {:ok, Map.new}
   end
 
