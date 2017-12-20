@@ -27,12 +27,12 @@ defmodule Howlong.Server do
 
   # Handlers
   def init(server_name) do
-    {:ok, {server_name, Howlong.Database.Server.get(server_name) || Howlong.ActivityList.new}}
+    {:ok, {server_name, Howlong.Database.get(server_name) || Howlong.ActivityList.new}}
   end
 
   def handle_cast({:add_activity, new_activity}, {server_name, activity_list}) do
     new_state = Howlong.ActivityList.add_activity(activity_list, new_activity)
-    Howlong.Database.Server.store(server_name, new_state)
+    Howlong.Database.store(server_name, new_state)
     {:noreply, {server_name, new_state}}
   end
 

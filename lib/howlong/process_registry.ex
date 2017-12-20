@@ -1,4 +1,6 @@
 defmodule Howlong.ProcessRegistry do
+  import Kernel, except: [send: 2]
+
   use GenServer
 
   #API
@@ -19,6 +21,14 @@ defmodule Howlong.ProcessRegistry do
     GenServer.cast(:process_registry, {:unregister_name, key})
   end
 
+  def send(key, message) do
+    case whereis_name(key) do
+      :undefined -> {:badarg, {key, message}}
+      pid ->
+        Kernel.send(pid, message)
+        pid
+    end
+  end
 
   # Handlers
   def init(_) do
@@ -35,7 +45,7 @@ defmodule Howlong.ProcessRegistry do
     end
   end
 
-  def handle_call({:whereis_name, key} _, process_registry) do
+  def handle_call({:whereis_name, key}, _, process_registry) do
     {:reply, Map.get(process_registry, key, :undefined), process_registry}
   end
 

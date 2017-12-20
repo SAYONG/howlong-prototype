@@ -8,7 +8,8 @@ defmodule Howlong.Supervisor do
 
   def init(_) do
     processes = [
-      worker(Howlong.Database.Server, ["./persist/"]),
+      worker(Howlong.ProcessRegistry ,[]),
+      supervisor(Howlong.Database, ["./persist/"]),
       worker(Howlong.Cache, [])]
 
     supervise(processes, strategy: :one_for_one)
