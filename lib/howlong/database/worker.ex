@@ -43,6 +43,6 @@ defmodule Howlong.Database.Worker do
   end
 
   defp via_tuple(worker_id) do
-    {:via, Howlong.ProcessRegistry, {:database_worker, worker_id}}
+    {:via, :gproc, {:n, :l, {:database_worker, worker_id}}}
   end
 end

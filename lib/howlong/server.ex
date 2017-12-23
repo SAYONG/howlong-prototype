@@ -25,7 +25,7 @@ defmodule Howlong.Server do
   end
 
   def whereis(name) do
-    Howlong.ProcessRegistry.whereis_name({:howlong_server, name})
+    :gproc.whereis_name({:n, :l, {:howlong_server, name}})
   end
 
 
@@ -59,6 +59,6 @@ defmodule Howlong.Server do
 
   # Private
   defp via_tuple(name) do
-    {:via, Howlong.ProcessRegistry, {:howlong_server, name}}
+    {:via, :gproc, {:n, :l, {:howlong_server, name}}}
   end
 end
