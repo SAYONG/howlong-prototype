@@ -14,7 +14,10 @@ defmodule Howlong.ProcessRegistry do
   end
 
   def whereis_name(key) do
-    GenServer.call(:process_registry, {:whereis_name, key})
+    case :ets.lookup(:process_registry, key) do
+      [{^key, pid}] -> pid
+      _ -> :undefined
+    end
   end
 
   def unregister_name(key) do
@@ -32,50 +35,30 @@ defmodule Howlong.ProcessRegistry do
 
   # Handlers
   def init(_) do
-    {:ok, Map.new}
+    :ets.new(:process_registry, [:named_table])
+    {:ok, nil}
   end
 
-  def handle_call({:register_name, key, pid}, _, process_registry) do
-    case Map.get(process_registry, key) do
-      nil ->
+  def handle_call({:register_name, key, pid}, _, state) do
+    case :ets.insert_new(:process_registry, {key, pid}) do
+      true ->
         Process.monitor(pid)
-        {:reply, :yes, Map.put(process_registry, key, pid)}
+        {:reply, :yes, state}
       _ ->
-        {:reply, :no, process_registry}
+        {:reply, :no, state}
     end
   end
 
-  def handle_call({:whereis_name, key}, _, process_registry) do
-    {:reply, Map.get(process_registry, key, :undefined), process_registry}
+  def handle_call({:unregister_name, key}, _, state) do
+    :ets.delete(:process_registry, key)
+    {:reply, key, state}
   end
 
-  def handle_info({:DOWN, _, :process,  pid, _}, process_registry) do
-    {:noreply, deregister_pid(process_registry, pid)}
+  def handle_info({:DOWN, _, :process,  pid, _}, state) do
+    :ets.match_delete(:process_registry, {:_, pid})
+    {:noreply, state}
   end
 
   def handle_info(_, state), do: {:noreply, state}
 
-
-  # Utils
-  defp deregister_pid(process_registry, pid) do
-    Enum.reduce(
-      process_registry,
-      process_registry,
-      fn 
-        ({process_key, process_id}, registry_acc) when process_id == pid ->
-          Map.delete(process_registry, process_key)
-        (_, registry_acc) -> registry_acc
-      end
-    )
-  end
-
-  def handle_call({:unregister_name, key}, _, process_registry) do
-    case Map.get(process_registry, key) do
-      nil ->
-        {:reply, :no, process_registry}
-      pid ->
-        Process.demonitor(pid)
-        {:reply, :yes, Map.delete(process_registry, key)}
-    end
-  end
 end
